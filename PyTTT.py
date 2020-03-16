@@ -8,6 +8,8 @@ class Game:
         self.victory_combinations = ((0, 1, 2), (3, 4, 5), (6, 7, 8), (0, 3, 6),
                                      (1, 4, 7), (2, 5, 8), (0, 4, 8), (2, 4, 6))
         self.mode = None
+        self.turn = 0
+        self.loop_break = False
         self.player = None
         self.victory = False
 
@@ -46,21 +48,32 @@ class Game:
         print(board)
 
     def ai(self):
+        smart_strategy = True
         while True:
+            self.loop_break = False
             field = None
-            strategy = randint(0, 1)
-            if strategy == 0:
+            for i, combination in enumerate(self.victory_combinations):
+                if self.loop_break:
+                    break
+                fields = ""
+                for j, field in enumerate(combination):
+                    field = self.board[field]
+                    fields = fields + field
+                    if fields.count("O") == 2 and fields.count("*") == 1:
+                        field = fields.index("*")
+                        field = combination[field]
+                        self.loop_break = True
+                        break
+                    elif fields.count("X") == 2 and fields.count("*") == 1:
+                        field = fields.index("*")
+                        field = combination[field]
+                        field += 1
+                        self.loop_break = True
+                        break
+                    elif i == 7 and j == 2:
+                        smart_strategy = False
+            if smart_strategy is False:
                 field = randint(1, 9)
-            else:
-                for combination in self.victory_combinations:
-                    fields = ""
-                    for field in combination:
-                        field = self.board[field]
-                        fields = fields + field
-                        if fields.count("X") == 2 and fields.count("*") == 1:
-                            field = fields.index("*")
-                            field = combination[field]
-                            break
             try:
                 field = int(field)
                 break
@@ -70,6 +83,7 @@ class Game:
         return field
 
     def player_turn(self):
+        self.turn += 1
         while True:
             if self.player == "X":
                 field = int(input("Gracz 1 (Krzyżyk)\n"
