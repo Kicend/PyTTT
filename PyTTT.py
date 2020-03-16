@@ -1,8 +1,13 @@
+from random import randint
+
 class Game:
     def __init__(self):
         self.board = ["*", "*", "*",
                       "*", "*", "*",
                       "*", "*", "*"]
+        self.victory_combinations = ((0, 1, 2), (3, 4, 5), (6, 7, 8), (0, 3, 6),
+                                     (1, 4, 7), (2, 5, 8), (0, 4, 8), (2, 4, 6))
+        self.mode = None
         self.player = None
         self.victory = False
 
@@ -14,21 +19,20 @@ class Game:
         while True:
             decision = input("> ")
             if decision == "1" or decision == "2":
-                if decision == "2":
-                    session = Game()
-                    session.main_loop(1)
-                    break
+                session = Game()
+                session.main_loop(int(decision))
+                break
             else:
                 print("Nieprawidłowa wartość!")
 
     def main_loop(self, mode: int):
-        if mode == 1:
-            self.render()
-            while True:
-                self.player = "X"
-                self.player_turn()
-                self.player = "O"
-                self.player_turn()
+        self.mode = mode
+        self.render()
+        while True:
+            self.player = "X"
+            self.player_turn()
+            self.player = "O"
+            self.player_turn()
 
     def render(self):
         board = ""
@@ -41,16 +45,43 @@ class Game:
             i += 1
         print(board)
 
+    def ai(self):
+        while True:
+            field = None
+            strategy = randint(0, 1)
+            if strategy == 0:
+                field = randint(1, 9)
+            else:
+                for combination in self.victory_combinations:
+                    fields = ""
+                    for field in combination:
+                        field = self.board[field]
+                        fields = fields + field
+                        if fields.count("X") == 2 and fields.count("*") == 1:
+                            field = fields.index("*")
+                            field = combination[field]
+                            break
+            try:
+                field = int(field)
+                break
+            except ValueError:
+                pass
+
+        return field
+
     def player_turn(self):
         while True:
             if self.player == "X":
                 field = int(input("Gracz 1 (Krzyżyk)\n"
                                   "> "))
             else:
-                field = int(input("Gracz 2 (Kółko)\n"
-                                  "> "))
-            if field < 0 or field > 8:
-                print("Nieprawidłowa wartość! Prawidłowe wartości pól mieszczą się w przedziale od 0 do 8\n")
+                if self.mode == 2:
+                    field = int(input("Gracz 2 (Kółko)\n"
+                                      "> "))
+                else:
+                    field = self.ai()
+            if field < 1 or field > 9:
+                print("Nieprawidłowa wartość! Prawidłowe wartości pól mieszczą się w przedziale od 1 do 9\n")
                 self.render()
             else:
                 if self.check_field(field):
@@ -72,29 +103,28 @@ class Game:
                     self.render()
 
     def check_field(self, field: int):
+        field -= 1
         if self.board[field] == "*":
             return True
         else:
             return False
 
     def is_victory(self):
-        victory_combinations = ((0, 1, 2), (3, 4, 5), (6, 7, 8), (0, 3, 6),
-                                (1, 4, 7), (2, 5, 8), (0, 4, 8), (2, 4, 6))
-
+        for combination in self.victory_combinations:
+            fields = ""
+            for field in combination:
+                field = self.board[field]
+                if field != "*":
+                    fields = fields + field
+                if fields.count("X") == 3 or fields.count("O") == 3:
+                    return True
         if self.board.count("*") == 0:
             return "draw"
         else:
-            for combination in victory_combinations:
-                fields = ""
-                for field in combination:
-                    field = self.board[field]
-                    if field != "*":
-                        fields = fields + field
-                    if fields.count("X") == 3 or fields.count("O") == 3:
-                        return True
             return False
 
     def change_field(self, field: int, char: str):
+        field -= 1
         self.board[field] = char
         self.render()
 
